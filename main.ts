@@ -1,5 +1,4 @@
-// ===== LED シューティング ゲーム =====
-
+// ===== LED シューティング ゲーム（完全修正版）===== 
 // ゲーム変数の初期化
 let playerPos = 2  // プレイヤーの初期位置（0-4）
 let bulletPos = -1  // 弾の位置（-1は発射前）
@@ -9,9 +8,9 @@ let score = 0     // スコア
 let gameOver = false  // ゲームオーバーフラグ
 let gameLoopActive = false  // ゲームループ制御フラグ
 
-// ボタン入力の初期化
-let aPressed = false
-let bPressed = false
+// ゲーム時間管理
+let gameTime = 0  // 経過フレーム数
+let enemyMoveInterval = 10  // 敵が移動するフレーム数（10ms×10=100ms）
 
 // ===== ゲーム開始 =====
 function startGame() {
@@ -21,66 +20,61 @@ function startGame() {
     enemyY = 0
     score = 0
     gameOver = false
-    gameLoopActive = false  // ループをリセット
+    gameTime = 0
     basic.clearScreen()
 }
-
 startGame()
 
-// ===== メインゲームループ（1回だけ実行）=====
+// ===== メインゲームループ（高速更新版）===== 
 basic.forever(function () {
-    if (!gameOver && gameLoopActive) {
-        // ゲーム画面を更新
-        updateGame()
+    if (gameLoopActive && !gameOver) {
+        gameTime = gameTime + 1
+        // 画面をクリア
+        basic.clearScreen()
+        // プレイヤーを描画（最下段）
+        led.plot(playerPos, 4)
+        // 敵を描画
+        if (enemyY >= 0 && enemyY <= 4) {
+            led.plot(enemyPos, enemyY)
+        }
+        // 弾を描画
+        if (bulletPos >= 0 && bulletPos <= 4) {
+            led.plot(playerPos, bulletPos)
+        }
+        // 敵が移動するタイミング（100ms ごと）
+        if (gameTime % enemyMoveInterval == 0) {
+            enemyY = enemyY + 1
+            // 敵がプレイヤーに衝突したかチェック
+            if (enemyY == 4 && enemyPos == playerPos) {
+                gameOver = true
+                showGameOver()
+            }
+            // 敵が一番下に達したかチェック
+            if (enemyY > 4) {
+                gameOver = true
+                showGameOver()
+            }
+        }
+        // 弾が上に移動（毎フレーム：10ms ごと）
+        if (bulletPos >= 0) {
+            bulletPos = bulletPos - 0.5  // 細かい移動で敵との衝突精度を上げる
+            // 弾が敵に当たったかチェック
+            if (bulletPos >= 0 && bulletPos <= 4 && Math.floor(bulletPos) == enemyY && playerPos == enemyPos) {
+                score = score + 1
+                // 新しい敵を出現させる
+                enemyPos = Math.randomRange(0, 5)
+                enemyY = 0
+                bulletPos = -1
+            }
+        }
+        // 弾が画面外に出たらリセット
+        if (bulletPos < 0 && bulletPos != -1) {
+            bulletPos = -1
+        }
+        // 短い待機（10ms）
+        basic.pause(10)
     }
 })
-
-// ===== ゲーム更新処理 =====
-function updateGame() {
-    // 画面をクリア
-    basic.clearScreen()
-    
-    // プレイヤーを描画（最下段）
-    led.plot(playerPos, 4)
-    
-    // 敵を描画
-    led.plot(enemyPos, enemyY)
-    
-    // 弾を描画
-    if (bulletPos >= 0) {
-        led.plot(playerPos, bulletPos)
-    }
-    
-    // 敵が落ちる（1000ms ごと）
-    basic.pause(1000)
-    enemyY = enemyY + 1
-    
-    // 弾が上がる（毎フレーム）
-    if (bulletPos >= 0) {
-        bulletPos = bulletPos - 1
-    }
-    
-    // 敵がプレイヤーに衝突したかチェック
-    if (enemyY >= 4 && enemyPos == playerPos) {
-        gameOver = true
-        showGameOver()
-    }
-    
-    // 敵が一番下に達したかチェック
-    if (enemyY > 4) {
-        gameOver = true
-        showGameOver()
-    }
-    
-    // 弾が敵に当たったかチェック
-    if (bulletPos >= 0 && bulletPos == enemyY && playerPos == enemyPos) {
-        score = score + 1
-        // 新しい敵を出現させる
-        enemyPos = Math.randomRange(0, 5)
-        enemyY = 0
-        bulletPos = -1
-    }
-}
 
 // ===== Aボタン：左に移動 =====
 input.onButtonPressed(Button.A, function () {
@@ -99,7 +93,7 @@ input.onButtonPressed(Button.B, function () {
 // ===== A+B：弾を発射 =====
 input.onButtonPressed(Button.AB, function () {
     if (!gameOver && bulletPos < 0) {
-        bulletPos = 3  // プレイヤーの一つ上から発射
+        bulletPos = 3.5  // プレイヤーの少し上から発射
     }
 })
 
@@ -112,7 +106,7 @@ function showGameOver() {
 // ===== ゲーム開始時にループを有効化 =====
 gameLoopActive = true
 
-// ===== タッチセンサー：再プレイ =====
+// ===== ���ッチセンサー：再プレイ =====
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
     gameLoopActive = false  // ループを一時停止
     basic.pause(200)  // 処理が完了するまで待機

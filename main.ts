@@ -7,6 +7,7 @@ let enemyPos = 0  // 敵のX位置
 let enemyY = 0    // 敵のY位置（0-4）
 let score = 0     // スコア
 let gameOver = false  // ゲームオーバーフラグ
+let gameLoopActive = false  // ゲームループ制御フラグ
 
 // ボタン入力の初期化
 let aPressed = false
@@ -20,14 +21,15 @@ function startGame() {
     enemyY = 0
     score = 0
     gameOver = false
+    gameLoopActive = false  // ループをリセット
     basic.clearScreen()
 }
 
 startGame()
 
-// ===== メインゲームループ =====
+// ===== メインゲームループ（1回だけ実行）=====
 basic.forever(function () {
-    if (!gameOver) {
+    if (!gameOver && gameLoopActive) {
         // ゲーム画面を更新
         updateGame()
     }
@@ -107,12 +109,13 @@ function showGameOver() {
     basic.showIcon(IconNames.No)
 }
 
+// ===== ゲーム開始時にループを有効化 =====
+gameLoopActive = true
+
 // ===== タッチセンサー：再プレイ =====
 input.onLogoEvent(TouchButtonEvent.Pressed, function () {
+    gameLoopActive = false  // ループを一時停止
+    basic.pause(200)  // 処理が完了するまで待機
     startGame()
-    basic.forever(function () {
-        if (!gameOver) {
-            updateGame()
-        }
-    })
+    gameLoopActive = true  // ループを再開
 })

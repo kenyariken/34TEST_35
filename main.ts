@@ -49,8 +49,8 @@ function updateGame() {
         led.plot(playerPos, bulletPos)
     }
     
-    // 敵が落ちる（500ms ごと）
-    basic.pause(500)
+    // 敵が落ちる（1000ms ごと）
+    basic.pause(1000)
     enemyY = enemyY + 1
     
     // 弾が上がる（毎フレーム）
@@ -104,8 +104,7 @@ input.onButtonPressed(Button.AB, function () {
 // ===== ゲームオーバー表示 =====
 function showGameOver() {
     basic.clearScreen()
-    basic.showString("GAME OVER", 100)
-    basic.showString("Score:" + score, 100)
+    basic.showIcon(IconNames.No)
 }
 
 // ===== タッチセンサー：再プレイ =====

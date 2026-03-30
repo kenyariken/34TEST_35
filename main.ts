@@ -1,4 +1,4 @@
-// ===== LED シューティング ゲーム（難易度調整版）=====
+// ===== LED シューティング ゲーム（難易度調整版完成）=====
 
 // ゲーム変数の初期化
 let playerPos = 2  // プレイヤーの初期位置（0-4）
@@ -17,7 +17,7 @@ let enemyMoveInterval = 20  // 敵が移動するフレーム数（10ms×20=200m
 function startGame() {
     playerPos = 2
     bulletPos = -1
-    enemyPos = Math.randomRange(0, 5)
+    enemyPos = Math.randomRange(0, 4)
     enemyY = -2  // 敵を画面外から開始
     score = 0
     gameOver = false
@@ -48,6 +48,20 @@ basic.forever(function () {
             led.plot(playerPos, bulletPos)
         }
         
+        // 先に弾を移動して当たり判定（敵移動より先に処理）
+        if (bulletPos >= 0) {
+            bulletPos = bulletPos - 0.25  // 敵の新しい速度に同期
+            
+            // 弾が敵に当たったかチェック
+            if (bulletPos >= 0 && bulletPos <= 4 && Math.floor(bulletPos) == enemyY && playerPos == enemyPos) {
+                score = score + 1
+                // 新しい敵を出現させる
+                enemyPos = Math.randomRange(0, 4)
+                enemyY = -2  // 画面外から再開
+                bulletPos = -1
+            }
+        }
+        
         // 敵が移動するタイミング（200ms ごと・遅くなった）
         if (gameTime % enemyMoveInterval == 0) {
             enemyY = enemyY + 1
@@ -58,24 +72,10 @@ basic.forever(function () {
                 showGameOver()
             }
             
-            // 敵が一番下に達したかチェック
+            // 敵が一番下に達���たかチェック
             if (enemyY > 4) {
                 gameOver = true
                 showGameOver()
-            }
-        }
-        
-        // 弾が上に移動（毎フレーム：10ms ごと）
-        if (bulletPos >= 0) {
-            bulletPos = bulletPos - 0.25  // 敵の新しい速度に同期
-            
-            // 弾が敵に当たったかチェック
-            if (bulletPos >= 0 && bulletPos <= 4 && Math.floor(bulletPos) == enemyY && playerPos == enemyPos) {
-                score = score + 1
-                // 新しい敵を出現させる
-                enemyPos = Math.randomRange(0, 5)
-                enemyY = -2  // 画面外から再開
-                bulletPos = -1
             }
         }
         

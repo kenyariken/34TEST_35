@@ -1,0 +1,11 @@
+{
+  "name": "led-shooting-game",
+  "dependencies": {
+    "core": "*"
+  },
+  "files": [
+    "main.ts",
+    "README.md"
+  ],
+  "preferredEditor": "tsprj"
+}
